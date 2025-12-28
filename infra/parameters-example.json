@@ -5,11 +5,17 @@
     "adminIpAddress": {
       "value": "0.0.0.0"
     },
+    "adminUsername": {
+      "value": "admin"
+    },
     "location": {
       "value": "westeurope"
     },
     "projectName": {
       "value": "azure-load-balancing"
+    },
+    "sshKeyData": {
+      "value": "publicKey"
     }
   }
 }

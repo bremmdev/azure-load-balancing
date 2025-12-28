@@ -24,4 +24,4 @@ resource vnet 'Microsoft.Network/virtualNetworks@2025-01-01' = {
   }
 }
 
-output subnet1ResourceId string = vnet::subnet1.id
+output subnet1ResourceId string = vnet::subnet1.id // output the subnet resource ID using the correct 'child' syntax
