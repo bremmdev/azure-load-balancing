@@ -45,16 +45,27 @@ module vmModule 'modules/vm.bicep' = [
       subnetId: vnetModule.outputs.subnet1ResourceId
       adminUsername: adminUsername
       index: i
+      backendPoolId: lbModule.outputs.backendPoolId
+      inboundNatRuleId: i == 0 ? lbModule.outputs.inboundNatRuleId1 : lbModule.outputs.inboundNatRuleId2
     }
   }
 ]
 
-// module lbModule 'modules/loadBalancer.bicep' = {
-//   name: 'loadBalancerDeployment'
-//   scope: rg
-//   params: {
-//     projectName: projectName
-//     location: location
-//     subnetResourceId: vnetModule.outputs.subnet1ResourceId
-//   }
-// }
+module publicIpModule 'modules/publicIp.bicep' = {
+  name: 'publicIpDeployment'
+  scope: rg
+  params: {
+    projectName: projectName
+    location: location
+  }
+}
+
+module lbModule 'modules/loadBalancer.bicep' = {
+  name: 'loadBalancerDeployment'
+  scope: rg
+  params: {
+    projectName: projectName
+    location: location
+    publicIpId: publicIpModule.outputs.publicIpId
+  }
+}

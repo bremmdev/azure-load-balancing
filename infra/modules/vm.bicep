@@ -3,6 +3,8 @@ param location string
 param sshKeyData string
 param subnetId string
 param adminUsername string
+param backendPoolId string
+param inboundNatRuleId string
 param index int // specific index passed in by parent for naming uniqueness
 
 var vmName = '${projectName}-vm-${index}'
@@ -20,6 +22,16 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-04-01' = {
           subnet: {
             id: subnetId
           }
+          loadBalancerBackendAddressPools: [
+            {
+              id: backendPoolId
+            }
+          ]
+          loadBalancerInboundNatRules: [
+            {
+              id: inboundNatRuleId
+            }
+          ]
         }
       }
     ]

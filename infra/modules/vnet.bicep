@@ -22,6 +22,17 @@ resource vnet 'Microsoft.Network/virtualNetworks@2025-01-01' = {
       }
     }
   }
+
+  resource subnet2 'subnets' = {
+    name: '${projectName}-subnet-lb'
+    properties: {
+      addressPrefix: '10.200.1.0/24'
+      networkSecurityGroup: {
+        id: nsgId
+      }
+    }
+  }
 }
 
 output subnet1ResourceId string = vnet::subnet1.id // output the subnet resource ID using the correct 'child' syntax
+output subnet2ResourceId string = vnet::subnet2.id
