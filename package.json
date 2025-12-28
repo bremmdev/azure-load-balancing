@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "azure:deploy": "az deployment sub create --location westeurope --template-file ./infra/main.bicep --parameters ./infra/parameters.json --what-if"
   },
   "engines": {
     "node": ">22.0.0"
