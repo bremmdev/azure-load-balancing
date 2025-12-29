@@ -35,6 +35,15 @@ resource lb 'Microsoft.Network/loadBalancers@2023-11-01' = {
           numberOfProbes: 2
         }
       }
+      {
+        name: 'TcpProbe-443'
+        properties: {
+          protocol: 'Tcp'
+          port: 443
+          intervalInSeconds: 15
+          numberOfProbes: 2
+        }
+      }
     ]
 
     // 4. LOAD BALANCING RULES
@@ -92,7 +101,7 @@ resource lb 'Microsoft.Network/loadBalancers@2023-11-01' = {
             )
           }
           probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', '${projectName}-lb', 'TcpProbe-80')
+            id: resourceId('Microsoft.Network/loadBalancers/probes', '${projectName}-lb', 'TcpProbe-443')
           }
         }
       }
