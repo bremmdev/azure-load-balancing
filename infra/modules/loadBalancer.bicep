@@ -57,6 +57,7 @@ resource lb 'Microsoft.Network/loadBalancers@2023-11-01' = {
           enableFloatingIP: false
           idleTimeoutInMinutes: 4
           loadDistribution: 'Default'
+          disableOutboundSnat: true
           // Use resourceId to link components within the same resource
           frontendIPConfiguration: {
             id: resourceId(
@@ -85,6 +86,7 @@ resource lb 'Microsoft.Network/loadBalancers@2023-11-01' = {
           backendPort: 443
           enableFloatingIP: false
           idleTimeoutInMinutes: 4
+          disableOutboundSnat: true
           loadDistribution: 'Default'
           frontendIPConfiguration: {
             id: resourceId(
@@ -138,6 +140,34 @@ resource lb 'Microsoft.Network/loadBalancers@2023-11-01' = {
           frontendPort: 2202
           backendPort: 22
           enableFloatingIP: false
+        }
+      }
+    ]
+
+    // 6. OUTBOUND RULES to manage outbound connectivity to prevent SNAT port exhaustion
+    outboundRules: [
+      {
+        name: 'OutboundRule'
+        properties: {
+          protocol: 'All'
+          frontendIPConfigurations: [
+            {
+              id: resourceId(
+                'Microsoft.Network/loadBalancers/frontendIPConfigurations',
+                '${projectName}-lb',
+                '${projectName}-LB-FrontEnd'
+              )
+            }
+          ]
+          backendAddressPool: {
+            id: resourceId(
+              'Microsoft.Network/loadBalancers/backendAddressPools',
+              '${projectName}-lb',
+              '${projectName}-backend-pool'
+            )
+          }
+          allocatedOutboundPorts: 2048
+          idleTimeoutInMinutes: 4 // default is 4
         }
       }
     ]
