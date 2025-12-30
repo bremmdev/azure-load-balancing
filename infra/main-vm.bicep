@@ -13,7 +13,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   location: location
 }
 
-module nsgModule 'modules/nsg.bicep' = {
+module nsgModule 'modules/vm/nsg.bicep' = {
   name: '${projectName}-nsg-deployment'
   scope: rg
   params: {
@@ -23,7 +23,7 @@ module nsgModule 'modules/nsg.bicep' = {
   }
 }
 
-module vnetModule 'modules/vnet.bicep' = {
+module vnetModule 'modules/vm/vnet.bicep' = {
   name: '${projectName}-vnet-deployment'
   scope: rg
   params: {
@@ -34,7 +34,7 @@ module vnetModule 'modules/vnet.bicep' = {
 }
 
 // create multiple VMs using a loop
-module vmModule 'modules/vm.bicep' = [
+module vmModule 'modules/vm/vm.bicep' = [
   for i in range(0, vmCount): {
     name: '${projectName}-vm-deployment-${i}'
     scope: rg
@@ -51,7 +51,7 @@ module vmModule 'modules/vm.bicep' = [
   }
 ]
 
-module publicIpModule 'modules/publicIp.bicep' = {
+module publicIpModule 'modules/vm/publicIp.bicep' = {
   name: 'publicIpDeployment'
   scope: rg
   params: {
@@ -60,7 +60,7 @@ module publicIpModule 'modules/publicIp.bicep' = {
   }
 }
 
-module lbModule 'modules/loadBalancer.bicep' = {
+module lbModule 'modules/vm/loadBalancer.bicep' = {
   name: 'loadBalancerDeployment'
   scope: rg
   params: {
