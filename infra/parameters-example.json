@@ -16,6 +16,12 @@
     },
     "sshKeyData": {
       "value": "publicKey"
+    },
+    "storageAccountName": {
+      "value": "storageaccountname"
+    },
+    "storageResourceGroup": {
+      "value": "storageResourceGroupName"
     }
   }
 }

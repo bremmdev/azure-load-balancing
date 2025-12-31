@@ -1,0 +1,51 @@
+#cloud-config
+package_update: true
+packages:
+  - debian-keyring
+  - debian-archive-keyring
+  - apt-transport-https
+  - curl
+
+write_files:
+  # 1. Write Caddy config to a temporary spot
+  - path: /tmp/MyCaddyfile
+    content: |
+      balance.bremm.dev {
+        root * /var/www/memcaydia
+        encode gzip
+        try_files {path} /index.html #fallback for SPA
+        file_server
+      }
+
+  # 2. Download script
+  - path: /opt/scripts/download_site.sh
+    permissions: "755"
+    content: |
+      #!/bin/bash
+      # Create target directory if it doesn't exist
+      mkdir -p /var/www/memcaydia
+
+      # Log in using the VM's identity
+      azcopy login --identity
+
+      # Download sites files using AzCopy
+      azcopy copy 'https://memcaydiasitedata.blob.core.windows.net/dist/*' '/var/www/memcaydia/' --recursive
+      systemctl reload caddy
+
+runcmd:
+  # Install AzCopy (Azure VMs don't always have it by default)
+  - wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && tar -xf azcopy_v10.tar.gz --strip-components=1 && cp ./azcopy /usr/bin/
+  - chmod +x /usr/bin/azcopy
+
+  # Install Caddy
+  - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+  - apt-get update
+  - apt-get install caddy -y
+
+  # Overwrite the default Caddyfile with our own
+  - mv /tmp/MyCaddyfile /etc/caddy/Caddyfile
+  - systemctl restart caddy
+
+  # Download the site content
+  - /opt/scripts/download_site.sh

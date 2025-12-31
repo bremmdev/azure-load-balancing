@@ -5,6 +5,7 @@ param subnetId string
 param adminUsername string
 param backendPoolId string
 param inboundNatRuleId string
+param managedIdentityId string
 param index int // specific index passed in by parent for naming uniqueness
 
 var vmName = '${projectName}-vm-${index}'
@@ -42,6 +43,13 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-04-01' = {
 resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   name: vmName
   location: location
+  identity: {
+    type: 'UserAssigned'
+    // Assign the managed identity to the VM, the VMs share the same identity
+    userAssignedIdentities: {
+      '${managedIdentityId}': {}
+    }
+  }
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_B1s' // 1 vCPU, 1 GB RAM

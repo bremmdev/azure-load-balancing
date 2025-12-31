@@ -7,6 +7,8 @@ param location string
 param adminIpAddress string
 param adminUsername string
 param sshKeyData string
+param storageAccountName string
+param storageResourceGroup string
 
 resource rg 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: 'rg-${projectName}'
@@ -42,6 +44,7 @@ module vmModule 'modules/vm/vm.bicep' = [
       projectName: projectName
       location: location
       sshKeyData: sshKeyData
+      managedIdentityId: identityModule.outputs.managedIdentityId
       subnetId: vnetModule.outputs.subnet1ResourceId
       adminUsername: adminUsername
       index: i
@@ -67,5 +70,29 @@ module lbModule 'modules/vm/loadBalancer.bicep' = {
     projectName: projectName
     location: location
     publicIpId: publicIpModule.outputs.publicIpId
+  }
+}
+
+module identityModule 'modules/vm/managedIdentity.bicep' = {
+  name: 'managedIdentityDeployment'
+  scope: rg
+  params: {
+    projectName: projectName
+    location: location
+  }
+}
+
+// We pull our site data from an existing Storage Account in another RG
+resource existingStorageRG 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
+  name: storageResourceGroup
+}
+
+// 2. Deploy the role assignment module specifically to that RG scope
+module storageRoleAssignment 'modules/vm/roleAssignment.bicep' = {
+  name: '${projectName}-role-assign-uami'
+  scope: existingStorageRG // Deploy to the Storage RG scope
+  params: {
+    storageAccountName: storageAccountName
+    principalId: identityModule.outputs.principalId
   }
 }
