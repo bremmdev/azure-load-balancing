@@ -49,6 +49,8 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
     osProfile: {
       computerName: vmName
       adminUsername: adminUsername
+      // Using cloud-init script for custom data, for example to install Docker, Caddy, Node.js, etc.
+      customData: base64(loadTextContent('../../scripts/install-vm.yaml'))
       linuxConfiguration: {
         disablePasswordAuthentication: true
         ssh: {

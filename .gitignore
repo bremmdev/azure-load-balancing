@@ -14,3 +14,4 @@ dist
 
 /infra/parameters.json
 /infra/parameters-vm.json
+/infra/scripts/*
