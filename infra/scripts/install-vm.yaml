@@ -10,11 +10,19 @@ write_files:
   # 1. Write Caddy config to a temporary spot
   - path: /tmp/MyCaddyfile
     content: |
-      balance.bremm.dev {
+      balancing.bremm.dev {
+        # Serve site with TLS with downloaded certs
+        tls /etc/caddy/certs/fullchain.pem /etc/caddy/certs/privkey.pem
+
         root * /var/www/memcaydia
         encode gzip
         try_files {path} /index.html #fallback for SPA
         file_server
+
+        # unique server ID header for each VM
+        header {
+          X-Server-ID __SERVER_ID__
+        }
       }
 
   # 2. Download script
@@ -37,11 +45,21 @@ runcmd:
   - wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && tar -xf azcopy_v10.tar.gz --strip-components=1 && cp ./azcopy /usr/bin/
   - chmod +x /usr/bin/azcopy
 
+  # Download TLS certificates from Blob Storage
+  - mkdir -p /etc/caddy/certs
+  - azcopy login --identity
+  - azcopy copy 'https://memcaydiasitedata.blob.core.windows.net/cert/fullchain.pem' '/etc/caddy/certs/'
+  - azcopy copy 'https://memcaydiasitedata.blob.core.windows.net/cert/privkey.pem' '/etc/caddy/certs/'
+
   # Install Caddy
   - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
   - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
   - apt-get update
   - apt-get install caddy -y
+
+  # Set cert permissions AFTER caddy user exists
+  - chown -R caddy:caddy /etc/caddy/certs
+  - chmod 600 /etc/caddy/certs/privkey.pem
 
   # Overwrite the default Caddyfile with our own
   - mv /tmp/MyCaddyfile /etc/caddy/Caddyfile
