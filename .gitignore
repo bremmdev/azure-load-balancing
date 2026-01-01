@@ -13,4 +13,4 @@ dist
 .vscode/*
 
 /infra/parameters.json
-/infra/parameters-vm.json
+/infra/vmdeployparameters.json

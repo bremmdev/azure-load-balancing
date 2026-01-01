@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "azure:deploy-vm": "az deployment sub create --location westeurope --template-file ./infra/main-vm.bicep --parameters ./infra/parameters-vm.json"
+    "azure:deployvm": "az deployment sub create --location westeurope --template-file ./infra/vmdeploy.bicep --parameters ./infra/vmdeployparameters.json"
   },
   "engines": {
     "node": ">22.0.0"
