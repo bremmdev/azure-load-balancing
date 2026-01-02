@@ -33,8 +33,9 @@ write_files:
       # Create target directory if it doesn't exist
       mkdir -p /var/www/memcaydia
 
-      # Log in using the VM's identity
-      azcopy login --identity
+      # Ensure correct ownership & permissions (idempotent)
+      chown -R caddy:www-data /var/www/memcaydia
+      chmod -R 775 /var/www/memcaydia
 
       # Download sites files using AzCopy
       azcopy copy 'https://memcaydiasitedata.blob.core.windows.net/dist/*' '/var/www/memcaydia/' --recursive
@@ -45,7 +46,7 @@ runcmd:
   - wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && tar -xf azcopy_v10.tar.gz --strip-components=1 && cp ./azcopy /usr/bin/
   - chmod +x /usr/bin/azcopy
 
-  # Download TLS certificates from Blob Storage
+  # Download TLS certificates from Blob Storage by logging in with the VM's managed identity
   - mkdir -p /etc/caddy/certs
   - azcopy login --identity
   - azcopy copy 'https://memcaydiasitedata.blob.core.windows.net/cert/fullchain.pem' '/etc/caddy/certs/'
