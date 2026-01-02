@@ -7,7 +7,7 @@ packages:
   - curl
 
 write_files:
-  # 1. Write Caddy config to a temporary spot
+  # Write Caddy config to a temporary spot
   - path: /tmp/MyCaddyfile
     content: |
       balancing.bremm.dev {
@@ -25,30 +25,70 @@ write_files:
         }
       }
 
-  # 2. Download script
+  # Script to download site content from Azure Blob Storage
   - path: /opt/scripts/download_site.sh
     permissions: "755"
     content: |
       #!/bin/bash
-      # Create target directory if it doesn't exist
-      mkdir -p /var/www/memcaydia
+      set -euo pipefail
+
+      # This tells azcopy to use managed identity WITHOUT needing cached login
+      export AZCOPY_AUTO_LOGIN_TYPE=MSI
+
+      DEST="/var/www/memcaydia/"
+      SOURCE="https://memcaydiasitedata.blob.core.windows.net/dist/"
 
       # Ensure correct ownership & permissions (idempotent)
-      chown -R caddy:www-data /var/www/memcaydia
-      chmod -R 775 /var/www/memcaydia
+      mkdir -p "$DEST"
+      chown -R caddy:www-data "$DEST"
+      chmod -R 775 "$DEST"
 
       # Download sites files using AzCopy
-      azcopy copy 'https://memcaydiasitedata.blob.core.windows.net/dist/*' '/var/www/memcaydia/' --recursive
+      azcopy sync \
+        "$SOURCE" \
+        "$DEST" \
+        --recursive \
+        --delete-destination=true
       systemctl reload caddy
+
+  # Systemd service to sync site content
+  - path: /etc/systemd/system/site-sync.service
+    content: |
+      [Unit]
+      Description=Sync site content from Azure Blob Storage
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/opt/scripts/download_site.sh
+      User=root
+      Group=root
+
+  - path: /etc/systemd/system/site-sync.timer
+    content: |
+      [Unit]
+      Description=Run site sync every 15 minutes
+
+      [Timer]
+      OnBootSec=2min
+      OnUnitActiveSec=15min
+      RandomizedDelaySec=60
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
 
 runcmd:
   # Install AzCopy (Azure VMs don't always have it by default)
   - wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && tar -xf azcopy_v10.tar.gz --strip-components=1 && cp ./azcopy /usr/bin/
   - chmod +x /usr/bin/azcopy
 
+  # Log in to AzCopy using the VM's managed identity
+  - azcopy login --identity
+
   # Download TLS certificates from Blob Storage by logging in with the VM's managed identity
   - mkdir -p /etc/caddy/certs
-  - azcopy login --identity
   - azcopy copy 'https://memcaydiasitedata.blob.core.windows.net/cert/fullchain.pem' '/etc/caddy/certs/'
   - azcopy copy 'https://memcaydiasitedata.blob.core.windows.net/cert/privkey.pem' '/etc/caddy/certs/'
 
@@ -66,5 +106,11 @@ runcmd:
   - mv /tmp/MyCaddyfile /etc/caddy/Caddyfile
   - systemctl restart caddy
 
-  # Download the site content
+  # Stop Caddy, sync content, then start
+  - systemctl stop caddy
   - /opt/scripts/download_site.sh
+  - systemctl start caddy
+
+  # Enable and start the site sync timer
+  - systemctl daemon-reload
+  - systemctl enable --now site-sync.timer
