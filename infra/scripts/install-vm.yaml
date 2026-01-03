@@ -40,15 +40,11 @@ write_files:
 
       # Ensure correct ownership & permissions (idempotent)
       mkdir -p "$DEST"
+
+      # Download sites files using AzCopy and set correct ownership & permissions
+      azcopy sync "$SOURCE" "$DEST" --recursive --delete-destination=true
       chown -R caddy:www-data "$DEST"
       chmod -R 775 "$DEST"
-
-      # Download sites files using AzCopy
-      azcopy sync \
-        "$SOURCE" \
-        "$DEST" \
-        --recursive \
-        --delete-destination=true
       systemctl reload caddy
 
   # Systemd service to sync site content
@@ -104,7 +100,6 @@ runcmd:
 
   # Overwrite the default Caddyfile with our own
   - mv /tmp/MyCaddyfile /etc/caddy/Caddyfile
-  - systemctl restart caddy
 
   # Stop Caddy, sync content, then start
   - systemctl stop caddy
