@@ -43,6 +43,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-04-01' = {
 resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   name: vmName
   location: location
+  zones: [string((index % 3) + 1)] // Distributes VMs across zones 1, 2, 3
   identity: {
     type: 'UserAssigned'
     // Assign the managed identity to the VM, the VMs share the same identity
@@ -81,6 +82,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
       osDisk: {
         createOption: 'FromImage'
         name: 'osdisk-${projectName}-vm-${index}'
+        deleteOption: 'Delete'
         managedDisk: {
           storageAccountType: 'Standard_LRS'
         }
