@@ -6,6 +6,7 @@ param adminUsername string
 param backendPoolId string
 param inboundNatRuleId string
 param managedIdentityId string
+param vmSize string
 param index int // specific index passed in by parent for naming uniqueness
 
 var vmName = '${projectName}-vm-${index}'
@@ -53,7 +54,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   }
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_B1s' // 1 vCPU, 1 GB RAM
+      vmSize: vmSize
     }
     osProfile: {
       computerName: vmName

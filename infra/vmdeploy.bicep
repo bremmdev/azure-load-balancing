@@ -9,6 +9,7 @@ param adminUsername string
 param sshKeyData string
 param storageAccountName string
 param storageResourceGroup string
+param vmSize string
 
 resource rg 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: 'rg-${projectName}'
@@ -43,6 +44,7 @@ module vmModule 'modules/vm/vm.bicep' = [
     params: {
       projectName: projectName
       location: location
+      vmSize: vmSize
       sshKeyData: sshKeyData
       managedIdentityId: identityModule.outputs.managedIdentityId
       subnetId: vnetModule.outputs.subnet1ResourceId

@@ -22,6 +22,9 @@
     },
     "storageResourceGroup": {
       "value": "storageResourceGroupName"
+    },
+    "vmSize": {
+      "value": "Standard_B1ms"
     }
   }
 }
